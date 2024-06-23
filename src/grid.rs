@@ -273,7 +273,7 @@ impl<O: Copy, V2: Vec2> Grid<O, V2> {
         &self.storage
     }
 
-    pub fn query_around(&self, pos: V2, radius: f32) -> impl Iterator<Item = CellObject<V2>> + '_ {
+    pub fn query_around(&self, pos: V2, radius: f32) -> impl Iterator<Item = &CellObject<V2>> + '_ {
         let ll = [pos.x() - radius, pos.y() - radius];
         let ur = [pos.x() + radius, pos.y() + radius];
 
@@ -286,7 +286,7 @@ impl<O: Copy, V2: Vec2> Grid<O, V2> {
             })
     }
 
-    pub fn query_aabb(&self, ll_: V2, ur_: V2) -> impl Iterator<Item = CellObject<V2>> + '_ {
+    pub fn query_aabb(&self, ll_: V2, ur_: V2) -> impl Iterator<Item = &CellObject<V2>> + '_ {
         let ll = [ll_.x().min(ur_.x()), ll_.y().min(ur_.y())];
         let ur = [ll_.x().max(ur_.x()), ll_.y().max(ur_.y())];
 
@@ -296,7 +296,7 @@ impl<O: Copy, V2: Vec2> Grid<O, V2> {
             })
     }
 
-    pub fn query_aabb_visitor(&self, ll_: V2, ur_: V2, mut visitor: impl FnMut(CellObject<V2>)) {
+    pub fn query_aabb_visitor(&self, ll_: V2, ur_: V2, mut visitor: impl FnMut(&CellObject<V2>)) {
         let ll = [ll_.x().min(ur_.x()), ll_.y().min(ur_.y())];
         let ur = [ll_.x().max(ur_.x()), ll_.y().max(ur_.y())];
 
@@ -322,17 +322,17 @@ impl<O: Copy, V2: Vec2> Grid<O, V2> {
     ///
     /// assert_eq!(vec![a, b], around);
     /// ```
-    pub fn query(&self, ll: V2, ur: V2) -> impl Iterator<Item = CellObject<V2>> + '_ {
+    pub fn query(&self, ll: V2, ur: V2) -> impl Iterator<Item = &CellObject<V2>> + '_ {
         let ll_id = self.storage.cell_id(ll);
         let ur_id = self.storage.cell_id(ur);
 
         cell_range(ll_id, ur_id)
             .flat_map(move |id| self.storage.cell(id))
-            .flat_map(|x| x.objs.iter().copied())
+            .flat_map(|x| x.objs.iter())
     }
 
     /// query_visitor is similar to query, but uses a visitor function to be slightly more performant.
-    pub fn query_visitor(&self, ll: V2, ur: V2, mut visitor: impl FnMut(CellObject<V2>)) {
+    pub fn query_visitor(&self, ll: V2, ur: V2, mut visitor: impl FnMut(&CellObject<V2>)) {
         let ll_id = self.storage.cell_id(ll);
         let ur_id = self.storage.cell_id(ur);
 
@@ -344,7 +344,7 @@ impl<O: Copy, V2: Vec2> Grid<O, V2> {
                 };
 
                 for h in cell.objs.iter() {
-                    visitor(*h);
+                    visitor(h);
                 }
             }
         }
